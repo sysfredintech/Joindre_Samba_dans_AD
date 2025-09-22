@@ -168,7 +168,7 @@ sudo systemctl enable --now winbind smbd nmbd
 
 **Sur le DC windows server**
 
-Créer un OU que le nommera "LinServers" dans cet exemple
+Créer un OU que l'on nommera "LinServers" dans cet exemple
 
 <img width="1384" height="743" alt="6a995744f7edefd8f2702efadcfe76dd" src="https://github.com/user-attachments/assets/03ba1afe-7b34-401e-aa0f-878f95538881" />
 
