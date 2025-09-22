@@ -30,7 +30,7 @@ iface ens18 inet static
        address 192.168.10.245
        netmask 255.255.255.0
        gateway 192.168.10.254
-       nameserver 192.168.10.254 192.168.10.28
+       nameserver 192.168.10.28 9.9.9.9
 ```
 `systemctl restart networking`
 
