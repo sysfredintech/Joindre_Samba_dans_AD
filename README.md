@@ -19,7 +19,7 @@
 # Post-installation
 
 _Optionnel: ajouter l'utilisateur créé lors de l'installation au groupe sudo_
-`usermod -aG sudo user`
+`usermod -aG sudo $USER`
 
 **Configuration réseau**
 
