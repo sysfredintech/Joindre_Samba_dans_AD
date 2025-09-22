@@ -88,7 +88,7 @@ sudo systemctl status systemd-timesyncd
 sudo apt install acl attr samba winbind libpam-winbind libnss-winbind krb5-config krb5-user dnsutils python3-setproctitle
 ```
 
-**configuration de krb5**
+**Configuration de krb5**
 
 `sudo nano /etc/krb5.conf`
 ```
