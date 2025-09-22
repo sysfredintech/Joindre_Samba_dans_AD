@@ -59,11 +59,10 @@ Name:	WIN-KO477AGSO9G.home.lab
 Address: 192.168.10.28
 ```
 
-_optionnel: configurer le serveur ssh_
+_optionnel: configurer le serveur ssh en fonction des besoins_
 `nano /etc/ssh/sshd_config`
---> Changer le port d'écoute et les politiques de sécurité si besoin
 
-**Pour la suite de l'article, la connexion au serveur se fera avec un compte utilisateur membre du groupe _sudo_ via ssh**
+### Pour la suite de l'article, la connexion au serveur se fera avec un compte utilisateur membre du groupe _sudo_ via ssh
 
 # Synchronisation de l'heure avec le serveur AD
 
