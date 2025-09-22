@@ -262,7 +262,7 @@ vm.dirty_background_ratio = 5
 - 4096 (4 Ko) : Taille minimale de buffer de réception
 - 87380 (85 Ko) : Taille par défaut
 - 16777216 (16 Mo) : Taille maximale (doit match rmem_max)
-Comportement : Le kernel ajuste dynamiquement entre min et max
+- Comportement : Le kernel ajuste dynamiquement entre min et max
 
 **net.ipv4.tcp_wmem = 4096 65536 16777216**
 - 4096 (4 Ko) : Taille minimale de buffer d'envoi
