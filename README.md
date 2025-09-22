@@ -249,26 +249,22 @@ vm.dirty_background_ratio = 5
 #### Paramètres Réseau
 
 **net.core.rmem_max = 16777216**
-_Valeur = 16 Mo (16,777,216 octets)_
+- Valeur= 16Mo
 - Signification: Taille maximale des buffers de réception (read) par socket
 - Impact: Permet de recevoir plus de données en une fois avant de devoir traiter
 
 **net.core.wmem_max = 16777216**
-_Valeur = 16 Mo (16,777,216 octets)_
+- Valeur= 16Mo
 - Signification: Taille maximale des buffers d'envoi (write) par socket
 - Impact: Permet d'envoyer plus de données en une fois, réduisant les appels système
 
 **net.ipv4.tcp_rmem = 4096 87380 16777216**
-Format = min default max
-_Valeurs =_
 - 4096 (4 Ko) : Taille minimale de buffer de réception
 - 87380 (85 Ko) : Taille par défaut
 - 16777216 (16 Mo) : Taille maximale (doit match rmem_max)
 Comportement : Le kernel ajuste dynamiquement entre min et max
 
 **net.ipv4.tcp_wmem = 4096 65536 16777216**
-Format = min default max
-_Valeurs=_
 - 4096 (4 Ko) : Taille minimale de buffer d'envoi
 - 65536 (64 Ko) : Taille par défaut
 - 16777216 (16 Mo) : Taille maximale (doit match wmem_max)
@@ -276,13 +272,11 @@ _Valeurs=_
 #### Paramètres Mémoire (Page Cache)
 
 **vm.dirty_ratio = 10**
-_Valeur = 10% de la mémoire physique_
 - Signification: Pourcentage de RAM sale (modifiée mais pas écrite sur disque) avant écriture forcée
 - Exemple: Sur 16 Go RAM → écriture forcée à 1.6 Go de données sales
 - Impact: Réduit les écritures disque fréquentes
 
 **vm.dirty_background_ratio = 5**
-_Valeur = 5% de la mémoire physique_
 - Signification: Pourcentage de RAM sale avant que le kernel lance l'écriture en background
 - Exemple: Sur 16 Go RAM → début écriture à 0.8 Go de données sales
 - Impact: Écriture asynchrone, moins bloquant
