@@ -96,7 +96,6 @@ sudo apt install acl attr samba winbind libpam-winbind libnss-winbind krb5-confi
         default_realm = HOME.LAB
         dns_lookup_realm = false
         dns_lookup_kdc = true
-
 ```
 _The Samba teams recommends to not set any further parameters in the `/etc/krb5.conf` file_
 
