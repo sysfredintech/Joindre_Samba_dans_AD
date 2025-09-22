@@ -246,60 +246,57 @@ vm.dirty_background_ratio = 5
 
 ### Détails
 
-**Paramètres Réseau**
+#### Paramètres Réseau
 
-- net.core.rmem_max = 16777216
+**net.core.rmem_max = 16777216**
+Valeur = 16 Mo (16,777,216 octets)
+Signification: Taille maximale des buffers de réception (read) par socket
+Impact: Permet de recevoir plus de données en une fois avant de devoir traiter
 
-Valeur : 16 Mo (16,777,216 octets)
-Signification : Taille maximale des buffers de réception (read) par socket
-Impact : Permet de recevoir plus de données en une fois avant de devoir traiter
+**net.core.wmem_max = 16777216**
+Valeur = 16 Mo (16,777,216 octets)
+Signification: Taille maximale des buffers d'envoi (write) par socket
+Impact: Permet d'envoyer plus de données en une fois, réduisant les appels système
 
-- net.core.wmem_max = 16777216
-
-Valeur : 16 Mo (16,777,216 octets)
-Signification : Taille maximale des buffers d'envoi (write) par socket
-Impact : Permet d'envoyer plus de données en une fois, réduisant les appels système
-
-- net.ipv4.tcp_rmem = 4096 87380 16777216
-
-Format : min default max
+**net.ipv4.tcp_rmem = 4096 87380 16777216**
+Format = min default max
 Valeurs :
-4096 (4 Ko) : Taille minimale de buffer de réception
-87380 (85 Ko) : Taille par défaut
-16777216 (16 Mo) : Taille maximale (doit match rmem_max)
-
+- 4096 (4 Ko) : Taille minimale de buffer de réception
+- 87380 (85 Ko) : Taille par défaut
+- 16777216 (16 Mo) : Taille maximale (doit match rmem_max)
 Comportement : Le kernel ajuste dynamiquement entre min et max
 
-- net.ipv4.tcp_wmem = 4096 65536 16777216
+**net.ipv4.tcp_wmem = 4096 65536 16777216**
+Format = min default max
+Valeurs:
+- 4096 (4 Ko) : Taille minimale de buffer d'envoi
+- 65536 (64 Ko) : Taille par défaut
+- 16777216 (16 Mo) : Taille maximale (doit match wmem_max)
 
-Format : min default max
-Valeurs :
-4096 (4 Ko) : Taille minimale de buffer d'envoi
-65536 (64 Ko) : Taille par défaut
-16777216 (16 Mo) : Taille maximale (doit match wmem_max)
+#### Paramètres Mémoire (Page Cache)
 
-- Paramètres Mémoire (Page Cache)
+**vm.dirty_ratio = 10**
+Valeur = 10% de la mémoire physique
+Signification: Pourcentage de RAM sale (modifiée mais pas écrite sur disque) avant écriture forcée
+Exemple: Sur 16 Go RAM → écriture forcée à 1.6 Go de données sales
+Impact: Réduit les écritures disque fréquentes
 
-vm.dirty_ratio = 10
-Valeur : 10% de la mémoire physique
-Signification : Pourcentage de RAM sale (modifiée mais pas écrite sur disque) avant écriture forcée
-Exemple : Sur 16 Go RAM → écriture forcée à 1.6 Go de données sales
-Impact : Réduit les écritures disque fréquentes
-
-- vm.dirty_background_ratio = 5
-
-Valeur : 5% de la mémoire physique
-Signification : Pourcentage de RAM sale avant que le kernel lance l'écriture en background
-Exemple : Sur 16 Go RAM → début écriture à 0.8 Go de données sales
-Impact : Écriture asynchrone, moins bloquant
+**vm.dirty_background_ratio = 5**
+Valeur = 5% de la mémoire physique
+Signification: Pourcentage de RAM sale avant que le kernel lance l'écriture en background
+Exemple: Sur 16 Go RAM → début écriture à 0.8 Go de données sales
+Impact: Écriture asynchrone, moins bloquant
 
 **Attention aux valeurs**
 
-Adaptez à votre mémoire RAM :
-RAM totale  dirty_ratio dirty_background_ratio
-4 Go    15  10
-8 Go    10  5
-16 Go   5   2
-32 Go+  2   1
+Adaptez à votre mémoire RAM:
+
+|RAM totale|  dirty_ratio| dirty_background_ratio|
+|---------:|------------:|----------------------:|
+|4 Go      | 15          | 10                    |
+|8 Go      | 10          | 5                     |
+|16 Go     | 5           | 2                     |
+|32 Go+    | 2           | 1                     |
+
 Trop agressif = Danger
 
