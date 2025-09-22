@@ -1,0 +1,302 @@
+## [Configurer un serveur Samba comme membre d'un domaine Active Directory]
+
+**Source principale: https://wiki.samba.org/index.php/Setting_up_a_Share_Using_Windows_ACLs**
+
+_22/09/2025_
+
+# Contexte
+
+- Un serveur windows 2022 comme crontrôleur de domaine principale Active Directory → ici: WIN-KO477AGSO9G.home.lab (ip = 192.168.10.28)
+- Le domaine: home.lab
+- Le sous-réseau du lab: 192.168.10.0/24
+- La passerelle: 192.168.10.254
+- L'installation du service samba se fera sur un serveur Debian 13.1
+
+# Installation du serveur Debian 13
+
+- Installation de Debian 13 sans DE - avec SSH server
+- Monter /srv sur une partition dédiée aux partages (optionnel)
+- La partition sur laquelle seront définis les partages doit être ext4 ou xfs (user and system `xattr` name space enabled)
+
+# Post-installation
+
+_Optionnel: ajouter l'utilisateur créé lors de l'installation au groupe sudo_
+`usermod -aG sudo user`
+
+**Configuration réseau**
+
+`nano /etc/network/interfaces`
+```
+allow-hotplug ens18
+iface ens18 inet static
+       address 192.168.10.245
+       netmask 255.255.255.0
+       gateway 192.168.10.254
+       nameserver 192.168.10.254 192.168.10.28
+```
+`systemctl restart networking`
+
+`sudo nano /etc/hosts`
+```
+127.0.0.1	localhost
+127.0.1.1	sambasrv.home.lab	sambasrv
+192.168.10.28   WIN-KO477AGSO9G.home.lab        WIN-KO477AGSO9G
+```
+`sudo nano /etc/resolv.conf`
+```
+domain home.lab
+nameserver 192.168.10.28
+nameserver 9.9.9.9
+```
+
+**Tester la résolution DNS**
+
+`nslookup WIN-KO477AGSO9G.home.lab`
+Doit retourner:
+```
+Server:		192.168.10.28
+Address:	192.168.10.28#53
+
+Name:	WIN-KO477AGSO9G.home.lab
+Address: 192.168.10.28
+```
+
+_optionnel: configurer le serveur ssh_
+`nano /etc/ssh/sshd_config`
+Changer le port d'écoute et les politiques de sécurité si besoin
+
+**Pour la suite de l'article, la connexion au serveur se fera avec un compte utilisateur membre du groupe _sudo_ via ssh**
+
+# Synchronisation de l'heure avec le serveur AD
+
+**Serveur NTP**
+
+`sudo nano /etc/systemd/timesyncd.conf`
+```
+[Time]
+NTP=WIN-KO477AGSO9G.home.lab
+FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org
+RootDistanceMaxSec=500
+```
+`sudo systemctl enable --now systemd-timesyncd`
+`sudo systemctl status systemd-timesyncd`
+
+# Créer la configuration Samba
+
+**Installation des paquets**
+
+```
+sudo apt install acl attr samba winbind libpam-winbind libnss-winbind krb5-config krb5-user dnsutils python3-setproctitle
+```
+
+**configuration de krb5**
+
+`sudo nano /etc/krb5.conf`
+```
+[libdefaults]
+        default_realm = HOME.LAB
+        dns_lookup_realm = false
+        dns_lookup_kdc = true
+
+```
+_The Samba teams recommends to not set any further parameters in the `/etc/krb5.conf` file_
+
+**Création du dossier partagé**
+
+`sudo mkdir -p /srv/shares/public`
+
+**Configuration du service samba**
+
+`sudo nano /etc/samba/smb.conf `
+```
+[global]
+
+    # Identification du domaine
+    workgroup = HOME
+    realm = HOME.LAB
+    security = ADS
+    netbios name = SAMBASRV
+
+    # Backend IDMAP (AUTORID)
+    idmap config * : backend = autorid
+    idmap config * : range = 10000-999999
+    idmap config * : rangesize = 100000
+
+    # Paramètres d'authentification
+    kerberos method = secrets and keytab
+    dedicated keytab file = /etc/krb5.keytab
+    winbind offline logon = false
+    winbind enum users = yes
+    winbind enum groups = yes
+    winbind nss info = rfc2307
+
+    # Performance et Logs
+    server string = %h samba files server
+    log file = /var/log/samba/log.%m
+    log level = 1
+    max log size = 1000
+    socket options = TCP_NODELAY SO_KEEPALIVE SO_RCVBUF=131072 SO_SNDBUF=131072
+
+    # Paramètres de sécurité
+    client use spnego = yes
+    client ntlmv2 auth = yes
+    server min protocol = SMB2_10
+    client min protocol = SMB2_10
+    server smb encrypt = desired
+
+    # Divers
+    template shell = /bin/bash
+    template homedir = /home/%U
+    
+    # ACLS
+    vfs objects = acl_xattr
+    map acl inherit = yes
+
+# Définition des partages
+
+[Public]
+    path = /srv/shares/public
+    comment = Partage Public
+    read only = no
+    
+```
+
+`sudo smbcontrol all reload-config`
+`sudo systemctl enable --now winbind smbd nmbd`
+
+# Rejoindre le domaine avec Samba
+
+**Sur le DC windows server**
+
+Créer un OU nommé "LinServers"
+
+![![6a995744f7edefd8f2702efadcfe76dd.png](./6a995744f7edefd8f2702efadcfe76dd.png)]()
+
+**Sur le serveur debian**
+
+`sudo net ads join -S 192.168.10.28 -U "Administrator" HOME createcomputer="OU=LinServers,DC=home,DC=lab"`
+
+**Configurer les permissions sur les dossiers partagés**
+
+`sudo chmod 2770 /srv/shares/*`
+`sudo chown root:"HOME\domain users" /srv/shares/public`
+
+**Vérifier l'intégration AD**
+
+`wbinfo -u  # Liste les utilisateurs AD`
+`wbinfo -g  # Liste les groupes AD`
+`getent passwd  # Affiche les utilisateurs (locaux + AD)`
+`getent group   # Affiche les groupes (locaux + AD)`
+
+**Tester l'authentification**
+
+`sudo smbclient -L localhost -U administrator`
+
+**Vérifier les services**
+
+`sudo systemctl status winbind smbd nmbd`
+
+_optionnel: Configurer pam pour la création du dossier /home/user à la 1ère connexion_
+
+`sudo nano /etc/pam.d/common-session`
+Ajouter cette ligne:
+```
+session required        pam_mkhomedir.so        skel=/etc/skel umask=0077
+```
+
+# Tests d'accès au partage
+
+Depuis un client linux
+
+`smbclient //SAMBASRV/Public -U "HOME\Administrator"`
+
+Depuis un poste windows
+
+![![4ad880d46175428d652affeb7fd8dd76.png](./4ad880d46175428d652affeb7fd8dd76.png)]()
+
+# Gérer les permissions depuis le DC windows server
+
+start → computer management → action → connect to another computer = SAMBASRV
+
+### Ne pas faire de modification dans "share permissions"
+
+![![473e7bbda4e6969fae39c6e13dbd4080.png](./473e7bbda4e6969fae39c6e13dbd4080.png)]()
+
+### Les permissions se gèrent depuis "security" → "advanced"
+
+![![220dd881d5e5f10fb5e7daede882a105.png](./220dd881d5e5f10fb5e7daede882a105.png)]()
+
+**Cette dernière section est optionnelle, attention aux valeurs incrémentées qui pourraient altérer le bon fonctionnement de la machine**
+
+# Optimisations des performances pour samba
+
+`sudo nano /etc/sysctl.conf`
+```
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 5
+```
+`sudo sysctl -p`
+
+### Détails
+
+**Paramètres Réseau**
+
+- net.core.rmem_max = 16777216
+
+Valeur : 16 Mo (16,777,216 octets)
+Signification : Taille maximale des buffers de réception (read) par socket
+Impact : Permet de recevoir plus de données en une fois avant de devoir traiter
+
+- net.core.wmem_max = 16777216
+
+Valeur : 16 Mo (16,777,216 octets)
+Signification : Taille maximale des buffers d'envoi (write) par socket
+Impact : Permet d'envoyer plus de données en une fois, réduisant les appels système
+
+- net.ipv4.tcp_rmem = 4096 87380 16777216
+
+Format : min default max
+Valeurs :
+4096 (4 Ko) : Taille minimale de buffer de réception
+87380 (85 Ko) : Taille par défaut
+16777216 (16 Mo) : Taille maximale (doit match rmem_max)
+
+Comportement : Le kernel ajuste dynamiquement entre min et max
+
+- net.ipv4.tcp_wmem = 4096 65536 16777216
+
+Format : min default max
+Valeurs :
+4096 (4 Ko) : Taille minimale de buffer d'envoi
+65536 (64 Ko) : Taille par défaut
+16777216 (16 Mo) : Taille maximale (doit match wmem_max)
+
+- Paramètres Mémoire (Page Cache)
+
+vm.dirty_ratio = 10
+Valeur : 10% de la mémoire physique
+Signification : Pourcentage de RAM sale (modifiée mais pas écrite sur disque) avant écriture forcée
+Exemple : Sur 16 Go RAM → écriture forcée à 1.6 Go de données sales
+Impact : Réduit les écritures disque fréquentes
+
+- vm.dirty_background_ratio = 5
+
+Valeur : 5% de la mémoire physique
+Signification : Pourcentage de RAM sale avant que le kernel lance l'écriture en background
+Exemple : Sur 16 Go RAM → début écriture à 0.8 Go de données sales
+Impact : Écriture asynchrone, moins bloquant
+
+**Attention aux valeurs**
+
+Adaptez à votre mémoire RAM :
+RAM totale  dirty_ratio dirty_background_ratio
+4 Go    15  10
+8 Go    10  5
+16 Go   5   2
+32 Go+  2   1
+Trop agressif = Danger
+
