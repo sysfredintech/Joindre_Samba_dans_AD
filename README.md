@@ -227,8 +227,9 @@ start → computer management → action → connect to another computer = SAMBA
 
 <img width="801" height="637" alt="220dd881d5e5f10fb5e7daede882a105" src="https://github.com/user-attachments/assets/74c128c1-4c4a-4fd0-abd9-70a2f0831145" />
 
-
-**Cette dernière section est optionnelle, attention aux valeurs incrémentées qui pourraient altérer le bon fonctionnement de la machine**
+---
+>Cette dernière section est optionnelle,
+>attention aux valeurs incrémentées qui pourraient altérer le bon fonctionnement de la machine
 
 # Optimisations des performances pour samba
 
