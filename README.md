@@ -170,7 +170,7 @@ _The Samba teams recommends to not set any further parameters in the `/etc/krb5
 
 Créer un OU nommé "LinServers"
 
-![![6a995744f7edefd8f2702efadcfe76dd.png](./6a995744f7edefd8f2702efadcfe76dd.png)]()
+<img width="1384" height="743" alt="6a995744f7edefd8f2702efadcfe76dd" src="https://github.com/user-attachments/assets/03ba1afe-7b34-401e-aa0f-878f95538881" />
 
 **Sur le serveur debian**
 
@@ -212,7 +212,7 @@ Depuis un client linux
 
 Depuis un poste windows
 
-![![4ad880d46175428d652affeb7fd8dd76.png](./4ad880d46175428d652affeb7fd8dd76.png)]()
+<img width="671" height="658" alt="4ad880d46175428d652affeb7fd8dd76" src="https://github.com/user-attachments/assets/f77f6f15-b60a-43b7-836a-d604681f47b8" />
 
 # Gérer les permissions depuis le DC windows server
 
@@ -220,11 +220,11 @@ start → computer management → action → connect to another computer = SAMBA
 
 ### Ne pas faire de modification dans "share permissions"
 
-![![473e7bbda4e6969fae39c6e13dbd4080.png](./473e7bbda4e6969fae39c6e13dbd4080.png)]()
+<img width="1412" height="836" alt="473e7bbda4e6969fae39c6e13dbd4080" src="https://github.com/user-attachments/assets/94764f50-5991-4052-b9a2-4cd30bfa66f7" />
 
 ### Les permissions se gèrent depuis "security" → "advanced"
 
-![![220dd881d5e5f10fb5e7daede882a105.png](./220dd881d5e5f10fb5e7daede882a105.png)]()
+<img width="801" height="637" alt="220dd881d5e5f10fb5e7daede882a105" src="https://github.com/user-attachments/assets/74c128c1-4c4a-4fd0-abd9-70a2f0831145" />
 
 **Cette dernière section est optionnelle, attention aux valeurs incrémentées qui pourraient altérer le bon fonctionnement de la machine**
 
