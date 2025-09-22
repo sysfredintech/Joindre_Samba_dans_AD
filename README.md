@@ -4,7 +4,7 @@
 
 # Contexte
 
-- Un serveur windows 2022 comme crontrôleur de domaine principale Active Directory → ici: WIN-KO477AGSO9G.home.lab (ip = 192.168.10.28)
+- Un serveur windows 2022 comme contrôleur de domaine principale Active Directory → ici: WIN-KO477AGSO9G.home.lab (ip = 192.168.10.28)
 - Le domaine: home.lab
 - Le sous-réseau du lab: 192.168.10.0/24
 - La passerelle: 192.168.10.254
