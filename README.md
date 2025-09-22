@@ -75,8 +75,10 @@ NTP=WIN-KO477AGSO9G.home.lab
 FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org
 RootDistanceMaxSec=500
 ```
-`sudo systemctl enable --now systemd-timesyncd`
-`sudo systemctl status systemd-timesyncd`
+```
+sudo systemctl enable --now systemd-timesyncd
+sudo systemctl status systemd-timesyncd
+```
 
 # Créer la configuration Samba
 
