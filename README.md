@@ -158,8 +158,10 @@ _The Samba teams recommends to not set any further parameters in the `/etc/krb5
     
 ```
 
-`sudo smbcontrol all reload-config`
-`sudo systemctl enable --now winbind smbd nmbd`
+```
+sudo smbcontrol all reload-config
+sudo systemctl enable --now winbind smbd nmbd
+```
 
 # Rejoindre le domaine avec Samba
 
@@ -176,15 +178,19 @@ Créer un OU nommé "LinServers"
 
 **Configurer les permissions sur les dossiers partagés**
 
-`sudo chmod 2770 /srv/shares/*`
-`sudo chown root:"HOME\domain users" /srv/shares/public`
+```
+sudo chmod 2770 /srv/shares/*
+sudo chown root:"HOME\domain users" /srv/shares/public
+```
 
 **Vérifier l'intégration AD**
 
-`wbinfo -u  # Liste les utilisateurs AD`
-`wbinfo -g  # Liste les groupes AD`
-`getent passwd  # Affiche les utilisateurs (locaux + AD)`
-`getent group   # Affiche les groupes (locaux + AD)`
+```
+wbinfo -u  # Liste les utilisateurs AD
+wbinfo -g  # Liste les groupes AD
+getent passwd  # Affiche les utilisateurs (locaux + AD)
+getent group   # Affiche les groupes (locaux + AD)
+```
 
 **Tester l'authentification**
 
@@ -197,7 +203,7 @@ Créer un OU nommé "LinServers"
 _optionnel: Configurer pam pour la création du dossier /home/user à la 1ère connexion_
 
 `sudo nano /etc/pam.d/common-session`
-Ajouter cette ligne:
+_Ajouter cette ligne:_
 ```
 session required        pam_mkhomedir.so        skel=/etc/skel umask=0077
 ```
