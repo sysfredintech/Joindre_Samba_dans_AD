@@ -19,12 +19,15 @@
 ## Post-installation
 
 _Optionnel: ajouter l'utilisateur créé lors de l'installation au groupe sudo_
-`usermod -aG sudo $USER`
+```
+usermod -aG sudo $USER
+```
 
 **Configuration réseau**
 
-`nano /etc/network/interfaces`
-
+```
+nano /etc/network/interfaces
+```
 ```
 allow-hotplug ens18
 iface ens18 inet static
@@ -33,19 +36,20 @@ iface ens18 inet static
        gateway 192.168.10.254
        nameserver 192.168.10.28 9.9.9.9
 ```
-
-`systemctl restart networking`
-
-`sudo nano /etc/hosts`
-
+```
+systemctl restart networking
+```
+```
+sudo nano /etc/hosts
+```
 ```
 127.0.0.1 localhost
 127.0.1.1 sambasrv.home.lab sambasrv
 192.168.10.28   WIN-KO477AGSO9G.home.lab        WIN-KO477AGSO9G
 ```
-
-`sudo nano /etc/resolv.conf`
-
+```
+sudo nano /etc/resolv.conf
+```
 ```
 domain home.lab
 nameserver 192.168.10.28
@@ -54,9 +58,10 @@ nameserver 9.9.9.9
 
 **Tester la résolution DNS**
 
-`nslookup WIN-KO477AGSO9G.home.lab`
+```
+nslookup WIN-KO477AGSO9G.home.lab
+```
 Doit retourner:
-
 ```
 Server:  192.168.10.28
 Address: 192.168.10.28#53
@@ -66,7 +71,9 @@ Address: 192.168.10.28
 ```
 
 _optionnel: configurer le serveur ssh en fonction des besoins_
-`nano /etc/ssh/sshd_config`
+```
+nano /etc/ssh/sshd_config
+```
 
 ##### Pour la suite de l'article, la connexion au serveur se fera avec un compte utilisateur membre du groupe _sudo_ via ssh
 
@@ -74,8 +81,9 @@ _optionnel: configurer le serveur ssh en fonction des besoins_
 
 **Serveur NTP**
 
-`sudo nano /etc/systemd/timesyncd.conf`
-
+```
+sudo nano /etc/systemd/timesyncd.conf
+```
 ```
 [Time]
 NTP=WIN-KO477AGSO9G.home.lab
@@ -85,6 +93,9 @@ RootDistanceMaxSec=500
 
 ```
 sudo systemctl enable --now systemd-timesyncd
+```
+Vérification:
+```
 sudo systemctl status systemd-timesyncd
 ```
 
@@ -98,8 +109,9 @@ sudo apt install acl attr samba winbind libpam-winbind libnss-winbind krb5-confi
 
 **Configuration de krb5**
 
-`sudo nano /etc/krb5.conf`
-
+```
+sudo nano /etc/krb5.conf
+```
 ```
 [libdefaults]
         default_realm = HOME.LAB
@@ -111,12 +123,13 @@ _The Samba teams recommends to not set any further parameters in the `/etc/krb5
 
 **Création du dossier partagé**
 
-`sudo mkdir -p /srv/shares/public`
-
+```
+sudo mkdir -p /srv/shares/public
+```
 **Configuration du service samba**
-
-`sudo nano /etc/samba/smb.conf`
-
+```
+sudo nano /etc/samba/smb.conf
+```
 ```
 [global]
 
@@ -185,7 +198,9 @@ Créer un OU que l'on nommera "LinServers" dans cet exemple
 
 **Sur le serveur debian**
 
-`sudo net ads join -S 192.168.10.28 -U "Administrator" HOME createcomputer="OU=LinServers,DC=home,DC=lab"`
+```
+sudo net ads join -S 192.168.10.28 -U "Administrator" HOME createcomputer="OU=LinServers,DC=home,DC=lab"
+```
 
 **Configurer les permissions sur les dossiers partagés**
 
@@ -205,17 +220,21 @@ getent group   # Affiche les groupes (locaux + AD)
 
 **Tester l'authentification**
 
-`sudo smbclient -L localhost -U administrator`
+```
+sudo smbclient -L localhost -U administrator
+```
 
 **Vérifier les services**
-
-`sudo systemctl status winbind smbd nmbd`
+```
+sudo systemctl status winbind smbd nmbd
+```
 
 **_optionnel: Configurer pam pour la création du dossier /home/user à la 1ère connexion_**
 
-`sudo nano /etc/pam.d/common-session`
+```
+sudo nano /etc/pam.d/common-session
+```
 _Ajouter cette ligne:_
-
 ```
 session required        pam_mkhomedir.so        skel=/etc/skel umask=0077
 ```
@@ -223,8 +242,9 @@ session required        pam_mkhomedir.so        skel=/etc/skel umask=0077
 ## Tests d'accès au partage
 
 Depuis un client linux
-
-`smbclient //SAMBASRV/Public -U "HOME\Administrator"`
+```
+smbclient //SAMBASRV/Public -U "HOME\Administrator"
+```
 
 Depuis un poste windows
 
@@ -247,8 +267,9 @@ start → computer management → action → connect to another computer = SAMBA
 
 ## Optimisations des performances pour samba
 
-`sudo nano /etc/sysctl.conf`
-
+```
+sudo nano /etc/sysctl.conf
+```
 ```
 net.core.rmem_max = 16777216
 net.core.wmem_max = 16777216
@@ -257,8 +278,9 @@ net.ipv4.tcp_wmem = 4096 65536 16777216
 vm.dirty_ratio = 10
 vm.dirty_background_ratio = 5
 ```
-
-`sudo sysctl -p`
+```
+sudo sysctl -p
+```
 
 ### Détails
 
