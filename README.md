@@ -254,11 +254,11 @@ Depuis un poste windows
 
 start → computer management → action → connect to another computer = SAMBASRV
 
-### Ne pas faire de modification dans "share permissions"
+### <ins>Ne PAS faire de modification dans "share permissions"</ins>
 
 <img width="1412" height="836" alt="473e7bbda4e6969fae39c6e13dbd4080" src="https://github.com/user-attachments/assets/94764f50-5991-4052-b9a2-4cd30bfa66f7" />
 
-### Les permissions se gèrent depuis "security" → "advanced"
+### <ins>Les permissions se gèrent depuis "security" → "advanced"</ins>
 
 <img width="801" height="637" alt="220dd881d5e5f10fb5e7daede882a105" src="https://github.com/user-attachments/assets/74c128c1-4c4a-4fd0-abd9-70a2f0831145" />
 
