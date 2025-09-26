@@ -1,4 +1,4 @@
-# <table><tr><td><center>Configurer un serveur Samba comme membre d'un domaine Active Directory</center></table></tr></td>
+# <table><tr><td><p align="center">Configurer un serveur Samba comme membre d'un domaine Active Directory</p></table></tr></td>
 
 **Source principale: <https://wiki.samba.org/index.php/Setting_up_a_Share_Using_Windows_ACLs>**
 
