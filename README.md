@@ -323,10 +323,16 @@ Trop agressif = Danger
 <ins>A savoir:</ins>
 - La limite _soft_ est une limite d'avertissement au-delà de laquelle l'utilisateur pourra continuer à écrire sur le disque jusqu'à la limite _hard_ et durant la période de _grâce_
 - Les quotas définis pour un groupe s'appliquent de manière collective à l'ensemble des utilisateurs de ce groupe (quota partagé)
+- Les quotas définis en inodes agissent sur le nombre de fichiers
 
 **Sur le serveur Debian**
 
 _Tout comme pour la gestion des acls, le système de fichier doit pouvoir gérer les quotas, dans ce lab, nous utilisons ext4_
+
+**Installation des paquets**
+```
+sudo apt install quota
+```
 
 **Ajouter la prise en charge des quotas au montage de la partition:**
 
@@ -348,7 +354,7 @@ sudo mount -o remount /srv
 quotacheck -cug /srv
 ```
 
-**Connaître la valeur d'un bloc en octet sur notre partition**
+**Connaître la valeur d'un bloc en octets sur notre partition**
 
 - Identifier le périphérique:
 ```
@@ -367,7 +373,7 @@ ici:
 Block size:               4096
 ```
 
-#### Pour fixer un quota à un utilisateur de l'Active Directory
+### Pour fixer un quota à un utilisateur de l'Active Directory
 
 **Identifier l'utilisateur sur lequel nous souhaitons appliquer un quota**
 
@@ -385,7 +391,7 @@ HOME\cronuser
 HOME\test.user
 ```
 
-**Configurer les limites _soft_ et _hard_ pour l'utilisateur _test.user_**
+**Configurer les limites _soft_ et _hard_ en octets pour l'utilisateur _test.user_**
 
 ```
 sudo edquota "HOME\\test.user"
@@ -426,7 +432,7 @@ root      --      52       0       0              8     0     0
 HOME\test.user --       0  262144  327680              0     0     0
 ```
 
-#### Pour fixer un quota à un groupe de l'Active Directory
+### Pour fixer un quota à un groupe de l'Active Directory
 
 **Identifier le groupe sur lequel nous souhaitons appliquer un quota**
 
@@ -458,7 +464,7 @@ HOME\dnsupdateproxy
 HOME\access-denied assistance users
 ```
 
-**Configurer les limites _soft_ et _hard_ pour le groupe**
+**Configurer les limites _soft_ et _hard_ en octets pour le groupe**
 
 ```
 sudo edquota -g "HOME\\domain users"
@@ -502,4 +508,4 @@ Time units may be: days, hours, minutes, or seconds
   Filesystem             Block grace period     Inode grace period
   /dev/sdb1                     7days                  7days
 ```
-Cette configuration est valable pour l'ensemble des éléments concernés (groupes, utilisateurs, blocs et inodes) et des systèmes de fichiers pour lesquels la politique de quotas est activée.
+<ins>Cette configuration est valable pour l'ensemble des éléments concernés (groupes, utilisateurs, blocs et inodes) et des systèmes de fichiers pour lesquels la politique de quotas est activée.</ins>
