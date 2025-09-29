@@ -420,7 +420,7 @@ Cette commande ouvre l'éditeur par défaut pour définir la configuration
 ```
 Disk quotas for user HOME\test.user (uid 111156):
   Filesystem                   blocks       soft       hard     inodes     soft     hard
-  /dev/sda1                         0          0          0          0        0        0
+  /dev/sdb1                         0          0          0          0        0        0
 ```
 
 - Filesystem = nom du périphérique concerné par les quotas appliqués
@@ -435,7 +435,7 @@ Pour définir une limite _soft_ à 1Go et une limite _hard_ à 1,25Go
 ```
 Disk quotas for user HOME\test.user (uid 111156):
   Filesystem                   blocks       soft       hard     inodes     soft     hard
-  /dev/sda1                         0      262144    327680          0        0        0
+  /dev/sdb1                         0      262144    327680          0        0        0
 ```
 Pour vérifier la configuration définie:
 ```
