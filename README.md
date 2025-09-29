@@ -2,31 +2,34 @@
 
 **Source principale: <https://wiki.samba.org/index.php/Setting_up_a_Share_Using_Windows_ACLs>**
 
-####  Environnement
+## Environnement
 
 - Un serveur windows 2022 comme contrôleur de domaine principale Active Directory → ici: WIN-KO477AGSO9G.home.lab (ip = 192.168.10.28)
 - Le domaine: home.lab
 - Le sous-réseau du lab: 192.168.10.0/24
 - La passerelle: 192.168.10.254
 - L'installation du service samba se fera sur un serveur Debian 13.1
+- L'accès aux dossier partagé se fera sur un serveur Ubuntu 24.04
 
-## Installation du serveur Debian 13
+## Installation du serveur Debian 13 pour le service samba
 
 - Installation de Debian 13 sans DE - avec SSH server
 - Monter /srv sur une partition dédiée aux partages (optionnel)
-- La partition sur laquelle seront définis les partages doit être ext4 ou xfs (user and system `xattr` name space enabled)
+- La partition sur laquelle seront définis les partages doit être ext4 ou xfs pour la prise en charge des acls et des quotas
 
 ## Post-installation
 
-_Optionnel: ajouter l'utilisateur créé lors de l'installation au groupe sudo_
+Ajouter l'utilisateur créé lors de l'installation au groupe `sudo`
 ```
-usermod -aG sudo $USER
+usermod -aG sudo nom_de_l_utilisateur
 ```
+La majorité des commandes dans cet article doivent être effectuées avec les privilèges super utilisateur, ici la connexion au serveur se fera avec un utilisateur membre du groupe `sudo`
 
-**Configuration réseau**
+### Configuration réseau
 
+**Edition des fichiers de configuration**
 ```
-nano /etc/network/interfaces
+sudo nano /etc/network/interfaces
 ```
 ```
 allow-hotplug ens18
@@ -37,7 +40,7 @@ iface ens18 inet static
        nameserver 192.168.10.28 9.9.9.9
 ```
 ```
-systemctl restart networking
+sudo systemctl restart networking
 ```
 ```
 sudo nano /etc/hosts
@@ -61,7 +64,7 @@ nameserver 9.9.9.9
 ```
 nslookup WIN-KO477AGSO9G.home.lab
 ```
-Doit retourner:
+Doit retourner
 ```
 Server:  192.168.10.28
 Address: 192.168.10.28#53
@@ -70,16 +73,9 @@ Name: WIN-KO477AGSO9G.home.lab
 Address: 192.168.10.28
 ```
 
-_optionnel: configurer le serveur ssh en fonction des besoins_
-```
-nano /etc/ssh/sshd_config
-```
+### Synchronisation de l'heure avec le serveur AD
 
-##### Pour la suite de l'article, la connexion au serveur se fera avec un compte utilisateur membre du groupe _sudo_ via ssh
-
-## Synchronisation de l'heure avec le serveur AD
-
-**Serveur NTP**
+**Définition du serveur NTP**
 
 ```
 sudo nano /etc/systemd/timesyncd.conf
@@ -119,7 +115,7 @@ sudo nano /etc/krb5.conf
         dns_lookup_kdc = true
 ```
 
-_The Samba teams recommends to not set any further parameters in the `/etc/krb5.conf` file_
+> The Samba teams recommends to not set any further parameters in the `/etc/krb5.conf` file
 
 **Création du dossier partagé**
 
@@ -202,14 +198,14 @@ Créer un OU que l'on nommera "LinServers" dans cet exemple
 sudo net ads join -S 192.168.10.28 -U "Administrator" HOME createcomputer="OU=LinServers,DC=home,DC=lab"
 ```
 
-**Configurer les permissions sur les dossiers partagés**
+Configurer les permissions sur le dossier partagé
 
 ```
-sudo chmod 2770 /srv/shares/*
+sudo chmod 2770 /srv/shares/public
 sudo chown root:"HOME\domain users" /srv/shares/public
 ```
 
-**Vérifier l'intégration AD**
+Vérifier l'intégration AD
 
 ```
 wbinfo -u  # Liste les utilisateurs AD
@@ -218,52 +214,56 @@ getent passwd  # Affiche les utilisateurs (locaux + AD)
 getent group   # Affiche les groupes (locaux + AD)
 ```
 
-**Tester l'authentification**
+Tester l'authentification
 
 ```
 sudo smbclient -L localhost -U administrator
 ```
 
-**Vérifier les services**
+Vérifier les services
 ```
 sudo systemctl status winbind smbd nmbd
 ```
 
-**_optionnel: Configurer pam pour la création du dossier /home/user à la 1ère connexion_**
+_Optionnel: Configurer pam pour la création du dossier /home/user à la 1ère connexion_
 
 ```
 sudo nano /etc/pam.d/common-session
 ```
-_Ajouter cette ligne:_
+_Ajouter cette ligne_
 ```
 session required        pam_mkhomedir.so        skel=/etc/skel umask=0077
 ```
 
-## Tests d'accès au partage
+### Tests d'accès au partage
 
-Depuis un client linux
+**Depuis un client linux**
 ```
 smbclient //SAMBASRV/Public -U "HOME\Administrator"
 ```
 
-Depuis un poste windows
+**Depuis un client windows**
+
+File Explorer &rarr; Network &rarr; SAMBASRV &rarr; Public
 
 <img width="671" height="658" alt="4ad880d46175428d652affeb7fd8dd76" src="https://github.com/user-attachments/assets/f77f6f15-b60a-43b7-836a-d604681f47b8" />
 
+---
+
 ## Gérer les permissions depuis le DC windows server
 
-start → computer management → action → connect to another computer = SAMBASRV
+Start → Computer Management → Action → Connect to another computer = SAMBASRV
 
-### <ins>Ne PAS faire de modification dans "share permissions"</ins>
+**<ins>Ne PAS faire de modification dans "share permissions"</ins>**
 
 <img width="1412" height="836" alt="473e7bbda4e6969fae39c6e13dbd4080" src="https://github.com/user-attachments/assets/94764f50-5991-4052-b9a2-4cd30bfa66f7" />
 
-### <ins>Les permissions se gèrent depuis "security" → "advanced"</ins>
+**<ins>Les permissions se gèrent depuis "security" → "advanced"</ins>**
 
 <img width="801" height="637" alt="220dd881d5e5f10fb5e7daede882a105" src="https://github.com/user-attachments/assets/74c128c1-4c4a-4fd0-abd9-70a2f0831145" />
 
 ---
-<table><tr><td>!!!L'opération suivante est optionnelle, attention aux valeurs incrémentées qui pourraient altérer le bon fonctionnement de la machine!!!</td></tr></table>
+`L'opération suivante est optionnelle, attention aux valeurs incrémentées qui pourraient altérer le bon fonctionnement de la machine!!!`
 
 ## Optimisations des performances pour samba
 
@@ -336,8 +336,8 @@ Adaptez à votre mémoire RAM:
 |16 Go     | 5           | 2                     |
 |32 Go+    | 2           | 1                     |
 
-Trop agressif = Danger
-***
+---
+
 ##  Gestion des quotas d'espace disque par utilisateurs ou par groupes
 
 **Source principale: https://docs.redhat.com/fr/documentation/red_hat_enterprise_linux/6/html/storage_administration_guide/ch-disk-quotas**
@@ -347,7 +347,7 @@ Trop agressif = Danger
 - Les quotas définis pour un groupe s'appliquent de manière collective à l'ensemble des utilisateurs de ce groupe (quota partagé)
 - Les quotas définis en inodes agissent sur le nombre de fichiers
 
-**Sur le serveur Debian**
+### Sur le serveur Debian
 
 _Tout comme pour la gestion des acls, le système de fichier doit pouvoir gérer les quotas, dans ce lab, nous utilisons ext4_
 
@@ -361,7 +361,7 @@ sudo apt install quota
 ```
 sudo nano /etc/fstab
 ```
-Options _usrquota_ et _grpquota_ sur le montage concerné
+Définir les options _usrquota_ et _grpquota_ sur le montage concerné
 ```
 /dev/sdb1       /srv    ext4    defaults,usrquota,grpquota       0       0
 ```
@@ -369,9 +369,7 @@ Remonter la partition
 ```
 sudo mount -o remount /srv
 ```
-
-**Initialiser les quotas**
-
+Initialiser les quotas
 ```
 quotacheck -cug /srv
 ```
@@ -403,7 +401,7 @@ Block size:               4096
 wbinfo -u
 ```
 
-Exemple de sortie:
+Exemple de sortie
 
 ```
 HOME\administrator
@@ -426,14 +424,14 @@ Disk quotas for user HOME\test.user (uid 111156):
 ```
 
 - Filesystem = nom du périphérique concerné par les quotas appliqués
-- blocks = blocs déjà utilisés par le groupe
+- blocks = blocs déjà utilisés par l'utilisateur (ou le groupe)
 - soft = limite _soft_ en octets
 - hard = limite _hard_ en octets
-- inodes = inodes déjà utilisés par le groupe
+- inodes = inodes déjà utilisés par l'utilisateur (ou le groupe)
 - soft = limite _soft_ en inodes
 - hard = limite _hard_ en inodes
 
-Pour définir une limite _soft_ à 1Go et une limite _hard_ à 1,25Go:
+Pour définir une limite _soft_ à 1Go et une limite _hard_ à 1,25Go
 ```
 Disk quotas for user HOME\test.user (uid 111156):
   Filesystem                   blocks       soft       hard     inodes     soft     hard
@@ -443,7 +441,7 @@ Pour vérifier la configuration définie:
 ```
 sudo repquota -auv
 ```
-Doit retourner:
+Doit retourner
 ```
 *** Report for user quotas on device /dev/sdb1
 Block grace time: 7days; Inode grace time: 7days
@@ -461,7 +459,7 @@ HOME\test.user --       0  262144  327680              0     0     0
 ```
 wbinfo -g
 ```
-Exemple de sortie:
+Exemple de sortie
 ```
 HOME\domain computers
 HOME\domain controllers
@@ -497,17 +495,17 @@ Disk quotas for group HOME\domain users (gid 110513):
   Filesystem                   blocks       soft       hard     inodes     soft     hard
   /dev/sdb1                         0          0          0          0        0        0
 ```
-Pour définir une limite _soft_ à 5Go et une limite _hard_ à 6Go:
+Pour définir une limite _soft_ à 5Go et une limite _hard_ à 6Go
 ```
 Disk quotas for group HOME\domain users (gid 110513):
   Filesystem                   blocks       soft       hard     inodes     soft     hard
   /dev/sda1                         0      1310720     1572864       0        0        0
 ```
-Pour vérifier la configuration définie:
+Pour vérifier la configuration définie
 ```
 sudo repquota -agv
 ```
-Doit retourner:
+Doit retourner
 ```
 *** Report for group quotas on device /dev/sdb1
 Block grace time: 7days; Inode grace time: 7days
@@ -518,7 +516,7 @@ root      --      40       0       0              5     0     0
 HOME\domain users --      0  1310720  1572864              0     0     0
 ```
 
-**Configurer la période de _grâce_**
+**Configurer la période de grâce**
 
 ```
 sudo edquota -t
@@ -530,4 +528,284 @@ Time units may be: days, hours, minutes, or seconds
   Filesystem             Block grace period     Inode grace period
   /dev/sdb1                     7days                  7days
 ```
-<ins>Cette configuration est valable pour l'ensemble des éléments concernés (groupes, utilisateurs, blocs et inodes) et des systèmes de fichiers pour lesquels la politique de quotas est activée.</ins>
+<ins>La configuration de la période de grâce est valable pour l'ensemble des éléments concernés (groupes, utilisateurs, blocs et inodes) et des systèmes de fichiers pour lesquels la politique de quotas est activée.</ins>
+
+---
+
+## Utiliser le partage _Public_ sur un serveur Ubuntu 24.04
+
+### Joindre le serveur Ubuntu au domaine AD
+
+**Installation des paquets**
+
+```
+sudo apt install sssd sssd-ad sssd-tools samba-common-bin oddjob oddjob-mkhomedir packagekit krb5-user cifs-utils realmd adcli
+```
+
+**Configuration DNS**
+
+```
+sudo nano /etc/hosts
+```
+
+```
+127.0.0.1 localhost
+127.0.1.1       ubuntusrv.home.lab     ubuntusrv
+192.168.10.28   WIN-KO477AGSO9G.home.lab        WIN-KO477AGSO9G
+```
+
+```
+sudo nano /etc/resolv.conf
+```
+
+```
+nameserver 192.168.10.28
+nameserver 192.168.10.254
+options edns0 trust-ad
+search home.lab
+```
+Vérification
+```
+nslookup WIN-KO477AGSO9G.home.lab
+```
+
+**Synchronisation de l'heure avec le serveur AD**
+
+```
+sudo nano /etc/systemd/timesyncd.conf
+```
+
+```
+[Time]
+NTP=WIN-KO477AGSO9G.home.lab
+FallbackNTP=ntp.ubuntu.com
+RootDistanceMaxSec=15
+```
+
+```
+sudo systemctl enable --now systemd-timesyncd
+```
+Vérification
+```
+sudo systemctl status systemd-timesyncd
+```
+
+**Configuration de sssd**
+
+```
+sudo nano /etc/sssd/sssd.conf
+```
+
+```
+[sssd]
+domains = home.lab
+config_file_version = 2
+services = nss, pam
+
+[domain/home.lab]
+default_shell = /bin/bash
+krb5_store_password_if_offline = True
+cache_credentials = True
+krb5_realm = HOME.LAB
+realmd_tags = manages-system joined-with-adcli
+id_provider = ad
+fallback_homedir = /home/%u
+ad_domain = home.lab
+use_fully_qualified_names = False
+ldap_id_mapping = True
+access_provider = ad
+cache_credentials = true
+enumerate = true
+```
+
+```
+sudo systemctl restart sssd
+```
+**Configuration de krb5**
+```
+sudo nano /etc/krb5.conf
+```
+```
+[logging]
+   default = FILE:/var/log/krb5libs.log
+   kdc = FILE:/var/log/krb5kdc.log
+   admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+   default_realm = HOME.LAB
+   dns_lookup_realm = false
+   dns_lookup_kdc = false
+   ticket_lifetime = 24h
+   renew_lifetime = 7d
+   forwardable = true
+
+[realms]
+   HOME.LAB = {
+     kdc = WIN-KO477AGSO9G.home.lab
+     admin_server = WIN-KO477AGSO9G.home.lab
+   }
+
+[domain_realm]
+    .home.lab = HOME.LAB
+    home.lab = HOME.LAB
+```
+**Joindre le serveur AD avec realm**
+
+```
+sudo realm -v discover home.lab
+sudo realm join -U administrator@HOME.LAB home.lab --computer-ou="OU=LinServers,DC=home,DC=lab"
+```
+
+_Optionnel: pour la création du dossier personnel des utilisateurs à la 1ère connexion_
+
+```
+sudo pam-auth-update --enable mkhomedir
+```
+
+Vérifier la jonction
+
+```
+sudo realm list
+```
+
+Tester l'authentification kerberos
+
+```
+kinit Administrator@HOME.LAB
+klist
+```
+
+Vérifier la résolution des utilisateurs AD
+
+```
+getent passwd HOME\\Administrator
+```
+
+**Mise en place du point de montage _Public_ au démarrage du serveur avec fstab**
+
+Création du dossier utilisé pour le montage
+
+```
+sudo mkdir /mnt/public
+```
+
+Configuration du fichier fstab
+
+```
+sudo nano /etc/fstab
+```
+On ajoute cette ligne
+```
+//sambasrv.home.lab/public /mnt/public cifs _netdev,sec=krb5,cruid=0,multiuser,vers=3.1.1,x-systemd.after=krb-boot.service   0 0
+```
+
+<ins>Options:</ins>
+
+- _netdev #_attend le réseau avant le montage_
+- sec=krb5 #_authentification kerberos_
+- cruid=0 #_défini le propriétaire du cache pour l'authentification (root)_
+- vers=3.1.1 #_version du protocole SMB utilisé_
+- x-systemd.after=krb-boot.service #_le service d'obtention de ticket kerberos doit être lancé_
+
+
+Création d'un script pour kinit
+```
+sudo nano /usr/local/bin/kinit-machine.sh
+```
+```bash
+#!/bin/bash
+/usr/bin/kinit -k UBUNTUSRV\$@HOME.LAB
+```
+Le rendre exécutable
+```
+sudo chmod +x /usr/local/bin/kinit-machine.sh
+```
+Tester l'obtention du ticket via le script
+```
+sudo bash /usr/local/bin/kinit-machine.sh
+sudo klist
+```
+Doit retourner une sortie similaire à
+```
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: UBUNTUSRV$@HOME.LAB
+
+Valid starting       Expires              Service principal
+09/29/2025 18:42:06  09/30/2025 04:42:06  krbtgt/HOME.LAB@HOME.LAB
+	renew until 10/06/2025 18:42:06
+```
+Création d'un service systemd pour l'obtention du ticket kerberos au démarrage
+```
+sudo nano /etc/systemd/system/krb-boot.service
+```
+```
+[Unit]
+Description=Acquire Kerberos ticket at boot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/kinit-machine.sh
+ExecStartPost=/bin/sleep 5
+TimeoutSec=60
+
+[Install]
+WantedBy=multi-user.target
+```
+```
+sudo systemctl daemon-reload
+sudo systemctl enable krb-boot.service
+```
+Exécution automatique du script toutes les 8h (validité du ticket = 10h par défaut)
+```
+sudo crontab -e
+```
+On ajoute cette ligne
+```
+0 */8 * * * /usr/local/bin/kinit-machine.sh
+```
+**Monter le partage samba immédiatement et redémarrer le serveur si possible pour vérifications**
+
+Montage immédiat
+```
+sudo mount -av
+```
+Doit retourner
+```
+mount.cifs kernel mount options: ip=192.168.10.245,unc=\\sambasrv.home.lab\public,sec=krb5,multiuser,vers=3.1.1,cruid=0,user=root,pass=********
+/mnt/public              : successfully mounted
+```
+Redémarrer le serveur si possible
+```
+sudo systemctl reboot
+```
+Vérification de la disponibilité du montage après le redémarrage du serveur
+```
+df | grep public
+```
+Doit retourner
+```
+//sambasrv.home.lab/public        1310720       12   1310708   1% /mnt/public
+```
+
+**Vérifier la connexion, l'accès au partage et les permissions avec un utilisateur de l'AD selon la configuration des acls**
+
+_Pour cet exemple, un utilisateur nommé test.user a été créé dans l'AD (membre de Domain Users par défaut)_
+
+```
+su - test.user@home.lab
+Password: 
+Creating directory '/home/test.user@home.lab'.
+```
+On crée un fichier test.txt à la racine du dossier _public_
+```
+cd /mnt/public
+touch test.txt
+ls -l
+```
+Doit retourner
+```
+-rwxr-xr-x 1 test.user@home.lab domain users@home.lab 0 Sep 29 19:26 test.txt
+```
+Notre utilisateur a les permissions en écriture à la racine du partage _public_
