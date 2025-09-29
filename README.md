@@ -499,7 +499,7 @@ Pour définir une limite _soft_ à 5Go et une limite _hard_ à 6Go
 ```
 Disk quotas for group HOME\domain users (gid 110513):
   Filesystem                   blocks       soft       hard     inodes     soft     hard
-  /dev/sda1                         0      1310720     1572864       0        0        0
+  /dev/sdb1                         0      1310720     1572864       0        0        0
 ```
 Pour vérifier la configuration définie
 ```
